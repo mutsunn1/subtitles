@@ -34,6 +34,7 @@ from ..config import (
 from ..engine import Engine
 from .history import HistoryWindow
 from .overlay import SubtitleOverlay
+from .settings import SettingsDialog
 
 _PROVIDERS = [("volc", "火山引擎"), ("aliyun", "阿里云百炼")]
 _LANGUAGES = [
@@ -101,6 +102,8 @@ class ControlWindow(QWidget):
         self.toggle_button.clicked.connect(self._on_toggle)
         self.history_button = QPushButton("历史")
         self.history_button.clicked.connect(self._show_history)
+        self.settings_button = QPushButton("设置")
+        self.settings_button.clicked.connect(self._show_settings)
 
         self.status_label = QLabel("就绪")
         self.status_label.setStyleSheet("color: #888888;")
@@ -114,6 +117,7 @@ class ControlWindow(QWidget):
         row.addWidget(self.target_combo)
         row.addWidget(self.toggle_button)
         row.addWidget(self.history_button)
+        row.addWidget(self.settings_button)
 
         layout = QVBoxLayout(self)
         layout.addLayout(row)
@@ -197,14 +201,14 @@ class ControlWindow(QWidget):
         if cfg.asr_provider == "volc" and not resolve_volc_api_key(cfg):
             return (
                 "未找到火山引擎 API Key。\n\n"
-                "请编辑 ~/.subtitles/config.json 填入 volc.api_key，"
+                "请点击「设置」按钮填入 API Key，"
                 "或设置环境变量 VOLC_API_KEY 后重启。\n"
                 "申请入口：https://console.volcengine.com/speech"
             )
         if cfg.asr_provider == "aliyun" and not resolve_aliyun_api_key(cfg):
             return (
                 "未找到阿里云百炼 API Key。\n\n"
-                "请编辑 ~/.subtitles/config.json 填入 aliyun.api_key，"
+                "请点击「设置」按钮填入 API Key，"
                 "或设置环境变量 DASHSCOPE_API_KEY 后重启。\n"
                 "申请入口：https://bailian.console.aliyun.com/"
             )
@@ -243,6 +247,13 @@ class ControlWindow(QWidget):
     def _show_history(self) -> None:
         self._history.show()
         self._history.raise_()
+
+    def _show_settings(self) -> None:
+        dialog = SettingsDialog(self._config, self)
+        if dialog.exec() == SettingsDialog.DialogCode.Accepted:
+            # 设置已写入 config.json；同步控制条状态（翻译开关、目标语言）
+            self._load_ui_state()
+            self.status_label.setText("设置已保存")
 
     def closeEvent(self, event) -> None:
         if self._engine is not None:
