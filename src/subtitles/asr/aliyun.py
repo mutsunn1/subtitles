@@ -1,7 +1,8 @@
-"""阿里云百炼 paraformer 实时语音识别（DashScope WebSocket）客户端。
+"""阿里云百炼实时语音识别（DashScope WebSocket）客户端。
 
 官方文档：
 
+- 实时语音识别用户指南：https://help.aliyun.com/zh/model-studio/real-time-speech-recognition-user-guide
 - WebSocket API：https://help.aliyun.com/zh/model-studio/websocket-for-paraformer-real-time-service
 - 服务端事件：https://help.aliyun.com/zh/model-studio/paraformer-server-events
 
@@ -13,6 +14,8 @@
   收到 ``task-started`` 后以二进制帧直接发送音频，结束时发送 ``finish-task``
 - 下行 ``result-generated`` 事件：``payload.output.sentence.sentence_end``
   为 true 表示句子级定稿，false 为中间结果
+- paraformer 系列与 qwen-audio-3.0-asr-flash-streaming / Fun-ASR-Realtime
+  共用同一套 run-task 协议，仅 ``model`` 与 ``parameters`` 取值不同
 """
 
 from __future__ import annotations
@@ -42,7 +45,7 @@ _LANGUAGE_HINTS = {
 
 
 class AliyunAsrProvider:
-    """阿里云百炼 paraformer-realtime 流式语音识别。"""
+    """阿里云百炼流式语音识别（paraformer / qwen-audio 系列）。"""
 
     def __init__(
         self,
@@ -77,17 +80,21 @@ class AliyunAsrProvider:
         await asyncio.wait_for(self._started.wait(), timeout=10.0)
 
     def _run_task_payload(self) -> dict:
+        # qwen-audio / funasr 系列与 paraformer 共用协议，但支持的 parameters 不同：
+        # qwen-audio 自动语种检测、智能过滤非人声，仅传 format/sample_rate；
+        # paraformer 系列额外支持 heartbeat / disfluency_removal_enabled / language_hints
         parameters: dict[str, Any] = {
             "format": "pcm",
             "sample_rate": 16000,
-            # 静音期间保活，避免服务端超时断连
-            "heartbeat": True,
-            # 过滤语气词，字幕更干净
-            "disfluency_removal_enabled": True,
         }
-        hint = _LANGUAGE_HINTS.get(self._language.split("-")[0].lower())
-        if hint:
-            parameters["language_hints"] = [hint]
+        if self._model.startswith("paraformer"):
+            # 静音期间保活，避免服务端超时断连
+            parameters["heartbeat"] = True
+            # 过滤语气词，字幕更干净
+            parameters["disfluency_removal_enabled"] = True
+            hint = _LANGUAGE_HINTS.get(self._language.split("-")[0].lower())
+            if hint:
+                parameters["language_hints"] = [hint]
         # 其余（VAD 断句 / 标点 / ITN）沿用官方默认值
         return {
             "task_group": "audio",

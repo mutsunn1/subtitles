@@ -33,6 +33,7 @@ _RESOURCE_IDS = [
 _VOLC_MODELS = ["bigmodel"]
 
 _ALIYUN_MODELS = [
+    "qwen-audio-3.0-asr-flash-streaming",
     "paraformer-realtime-v2",
     "paraformer-realtime-v1",
     "paraformer-realtime-8k-v2",
@@ -112,7 +113,7 @@ class SettingsDialog(QDialog):
         volc_form.addRow("模型:", self.volc_model)
 
         # ---- 阿里云百炼 ----
-        aliyun_box = QGroupBox("阿里云百炼（paraformer 实时识别）")
+        aliyun_box = QGroupBox("阿里云百炼（paraformer / qwen-audio 实时识别）")
         aliyun_form = QFormLayout(aliyun_box)
         self.aliyun_key = _SecretEdit(config.aliyun.api_key)
         self.aliyun_model = _preset_combo(_ALIYUN_MODELS, config.aliyun.model)

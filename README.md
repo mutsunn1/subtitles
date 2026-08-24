@@ -77,9 +77,11 @@ uv run subtitles
   `resource_id` 按已开通资源填写：ASR 1.0 为 `volc.bigasr.sauc.duration`（小时版）/
   `volc.bigasr.sauc.concurrent`（并发版），ASR 2.0 为 `volc.seedasr.sauc.*`。
   协议文档：<https://www.volcengine.com/docs/6561/1354869>
-- 阿里云百炼（paraformer 实时语音识别）：
+- 阿里云百炼（paraformer / qwen-audio 实时语音识别）：
   <https://bailian.console.aliyun.com/> ，获取 API Key（即 DashScope Key）。
-  协议文档：<https://help.aliyun.com/zh/model-studio/websocket-for-paraformer-real-time-service>
+  模型可选 `qwen-audio-3.0-asr-flash-streaming`（自动语种检测，推荐）或
+  `paraformer-realtime-v2` 等，在设置界面下拉选择或自行填写。
+  协议文档：<https://help.aliyun.com/zh/model-studio/real-time-speech-recognition-user-guide>
 - 翻译：任意 OpenAI 兼容 chat completions 服务（DeepSeek、通义、Kimi 等），
   填 `translate.base_url` / `translate.api_key` / `translate.model` 即可。
   未配置翻译时仅显示原文，不影响识别主流程。
