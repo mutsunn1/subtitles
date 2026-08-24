@@ -30,7 +30,39 @@ _RESOURCE_IDS = [
     "volc.seedasr.sauc.concurrent",
 ]
 
+_VOLC_MODELS = ["bigmodel"]
+
+_ALIYUN_MODELS = [
+    "paraformer-realtime-v2",
+    "paraformer-realtime-v1",
+    "paraformer-realtime-8k-v2",
+]
+
+_LLM_BASE_URLS = [
+    "https://api.deepseek.com/v1",
+    "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    "https://ark.cn-beijing.volces.com/api/v3",
+    "https://api.openai.com/v1",
+]
+
+_LLM_MODELS = [
+    "deepseek-chat",
+    "qwen-plus",
+    "qwen-max",
+    "doubao-pro-32k",
+    "gpt-4o-mini",
+]
+
 _TARGET_LANGUAGES = ["中文", "English", "日本語", "한국어"]
+
+
+def _preset_combo(items: list[str], current: str) -> QComboBox:
+    """预设下拉 + 可自由编辑的输入框（模型、base_url 等）。"""
+    combo = QComboBox()
+    combo.setEditable(True)
+    combo.addItems(items)
+    combo.setCurrentText(current)
+    return combo
 
 
 class _SecretEdit(QWidget):
@@ -72,19 +104,18 @@ class SettingsDialog(QDialog):
         self.volc_key = _SecretEdit(config.volc.api_key)
         self.volc_app_id = QLineEdit(config.volc.app_id)
         self.volc_app_id.setPlaceholderText("旧版控制台 App ID（可选）")
-        self.volc_resource = QComboBox()
-        self.volc_resource.setEditable(True)
-        self.volc_resource.addItems(_RESOURCE_IDS)
-        self.volc_resource.setCurrentText(config.volc.resource_id)
+        self.volc_resource = _preset_combo(_RESOURCE_IDS, config.volc.resource_id)
+        self.volc_model = _preset_combo(_VOLC_MODELS, config.volc.model_name)
         volc_form.addRow("API Key:", self.volc_key)
         volc_form.addRow("App ID:", self.volc_app_id)
         volc_form.addRow("资源 ID:", self.volc_resource)
+        volc_form.addRow("模型:", self.volc_model)
 
         # ---- 阿里云百炼 ----
         aliyun_box = QGroupBox("阿里云百炼（paraformer 实时识别）")
         aliyun_form = QFormLayout(aliyun_box)
         self.aliyun_key = _SecretEdit(config.aliyun.api_key)
-        self.aliyun_model = QLineEdit(config.aliyun.model)
+        self.aliyun_model = _preset_combo(_ALIYUN_MODELS, config.aliyun.model)
         aliyun_form.addRow("API Key:", self.aliyun_key)
         aliyun_form.addRow("模型:", self.aliyun_model)
 
@@ -93,10 +124,14 @@ class SettingsDialog(QDialog):
         translate_form = QFormLayout(translate_box)
         self.translate_enabled = QCheckBox("启用翻译")
         self.translate_enabled.setChecked(config.translate.enabled)
-        self.translate_base_url = QLineEdit(config.translate.base_url)
+        self.translate_base_url = _preset_combo(
+            _LLM_BASE_URLS, config.translate.base_url
+        )
         self.translate_key = _SecretEdit(config.translate.api_key)
-        self.translate_model = QLineEdit(config.translate.model)
-        self.translate_model.setPlaceholderText("如 deepseek-chat / qwen-plus")
+        self.translate_model = _preset_combo(_LLM_MODELS, config.translate.model)
+        self.translate_model.lineEdit().setPlaceholderText(
+            "如 deepseek-chat / qwen-plus"
+        )
         self.translate_target = QComboBox()
         self.translate_target.setEditable(True)
         self.translate_target.addItems(_TARGET_LANGUAGES)
@@ -135,12 +170,15 @@ class SettingsDialog(QDialog):
         cfg.volc.api_key = self.volc_key.text()
         cfg.volc.app_id = self.volc_app_id.text().strip()
         cfg.volc.resource_id = self.volc_resource.currentText().strip()
+        cfg.volc.model_name = self.volc_model.currentText().strip() or "bigmodel"
         cfg.aliyun.api_key = self.aliyun_key.text()
-        cfg.aliyun.model = self.aliyun_model.text().strip() or "paraformer-realtime-v2"
+        cfg.aliyun.model = (
+            self.aliyun_model.currentText().strip() or "paraformer-realtime-v2"
+        )
         cfg.translate.enabled = self.translate_enabled.isChecked()
-        cfg.translate.base_url = self.translate_base_url.text().strip()
+        cfg.translate.base_url = self.translate_base_url.currentText().strip()
         cfg.translate.api_key = self.translate_key.text()
-        cfg.translate.model = self.translate_model.text().strip()
+        cfg.translate.model = self.translate_model.currentText().strip()
         cfg.translate.target_language = (
             self.translate_target.currentText().strip() or "中文"
         )

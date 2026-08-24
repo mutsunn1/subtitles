@@ -132,6 +132,7 @@ class VolcAsrProvider:
         on_event: OnAsrEvent,
         api_key: str,
         resource_id: str = "volc.bigasr.sauc.duration",
+        model_name: str = "bigmodel",
         endpoint: str = ENDPOINT,
         # 静音判停时长（ms）：超过即输出 definite 分句，官方默认 800
         end_window_size: int = 800,
@@ -139,6 +140,7 @@ class VolcAsrProvider:
         self._on_event = on_event
         self._api_key = api_key
         self._resource_id = resource_id
+        self._model_name = model_name
         self._endpoint = endpoint
         self._end_window_size = end_window_size
         self._ws: Any = None
@@ -169,7 +171,7 @@ class VolcAsrProvider:
                 "channel": 1,
             },
             "request": {
-                "model_name": "bigmodel",
+                "model_name": self._model_name,
                 "enable_punc": True,
                 "enable_itn": True,
                 "show_utterances": True,

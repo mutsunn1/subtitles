@@ -35,6 +35,7 @@ class VolcConfig:
     # 资源 ID：ASR 1.0 小时版 volc.bigasr.sauc.duration / 并发版 volc.bigasr.sauc.concurrent，
     # ASR 2.0 小时版 volc.seedasr.sauc.duration / 并发版 volc.seedasr.sauc.concurrent
     resource_id: str = "volc.bigasr.sauc.duration"
+    model_name: str = "bigmodel"  # 请求体 model_name，当前官方取值 bigmodel
 
 
 @dataclass
@@ -110,6 +111,7 @@ def load_config(path=DEFAULT_CONFIG_PATH) -> Config:
             app_id=str(volc.get("app_id", "")),
             api_key=str(volc.get("api_key", "")),
             resource_id=str(volc.get("resource_id", VolcConfig.resource_id)),
+            model_name=str(volc.get("model_name", VolcConfig.model_name)),
         )
     aliyun = data.get("aliyun")
     if isinstance(aliyun, dict):

@@ -44,6 +44,7 @@ def create_provider(config: Config, on_event) -> object:
             on_event=on_event,
             api_key=api_key,
             resource_id=config.volc.resource_id,
+            model_name=config.volc.model_name,
         )
     if config.asr_provider == "aliyun":
         from .asr.aliyun import AliyunAsrProvider
